@@ -7,6 +7,8 @@ import org.example.model.ChatEntry;
 import org.example.model.Role;
 import org.example.repository.ChatRepository;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,9 @@ public class ChatService {
 
     @Autowired
     private ChatService myProxy;
+
+    @Autowired
+    private PostgresChatMemory postgresChatMemory;
 
     public List<Chat> getAllChats() {
         return chatRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -65,17 +70,17 @@ public class ChatService {
     }
 
     public SseEmitter proceedInteractionWithStreaming(Long chatId, String prompt) {
-        myProxy.addChatEntry(chatId, prompt, USER);
 
         StringBuilder answer = new StringBuilder();
 
-
         SseEmitter emitter = new SseEmitter(0L);
-        chatClient.prompt().user(prompt).stream()
+
+        chatClient.prompt(prompt)
+                .advisors(MessageChatMemoryAdvisor.builder(postgresChatMemory).conversationId(String.valueOf(chatId)).build())
+                .stream()
                 .chatResponse()
                 .subscribe(chatResponse -> processToken(chatResponse, emitter, answer),
-                        emitter::completeWithError,
-                        ()->myProxy.addChatEntry(chatId, answer.toString(), ASSISTANT));
+                        emitter::completeWithError);
         return emitter;
     }
 
