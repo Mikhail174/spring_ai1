@@ -7,16 +7,14 @@ import org.example.model.ChatEntry;
 import org.example.model.Role;
 import org.example.repository.ChatRepository;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
+import org.springframework.ai.chat.memory.ChatMemory;
+
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.example.model.Role.ASSISTANT;
@@ -33,9 +31,6 @@ public class ChatService {
 
     @Autowired
     private ChatService myProxy;
-
-    @Autowired
-    private PostgresChatMemory postgresChatMemory;
 
     public List<Chat> getAllChats() {
         return chatRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -76,7 +71,7 @@ public class ChatService {
         SseEmitter emitter = new SseEmitter(0L);
 
         chatClient.prompt(prompt)
-                .advisors(MessageChatMemoryAdvisor.builder(postgresChatMemory).conversationId(String.valueOf(chatId)).build())
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID,chatId))
                 .stream()
                 .chatResponse()
                 .subscribe(chatResponse -> processToken(chatResponse, emitter, answer),
