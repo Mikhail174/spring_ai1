@@ -6,8 +6,10 @@ import org.example.service.PostgresChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,10 +26,17 @@ public class DemoWebinar1NoReactApplication {
 
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder) {
-        return builder.defaultAdvisors(getAdvisor()).build();
+        return builder.defaultAdvisors(getHistoryAdvisor(), getRagAdvisor()).build();
     }
 
-    private Advisor getAdvisor() {
+    @Autowired
+    private VectorStore vectorStore;
+
+    private Advisor getRagAdvisor() {
+        return QuestionAnswerAdvisor.builder(vectorStore).build();
+    }
+
+    private Advisor getHistoryAdvisor() {
 
         return MessageChatMemoryAdvisor.builder(getChatMemory()).build();
     }
