@@ -75,7 +75,8 @@ public class ChatService {
                 .stream()
                 .chatResponse()
                 .subscribe(chatResponse -> processToken(chatResponse, emitter, answer),
-                        emitter::completeWithError);
+                        emitter::completeWithError,
+                        emitter::complete);
         return emitter;
     }
 
