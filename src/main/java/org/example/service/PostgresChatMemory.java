@@ -34,7 +34,6 @@ public class PostgresChatMemory implements ChatMemory {
         return chat.getHistory().stream()
                 .skip(messagesToSkip)
                 .map(ChatEntry::toMessage)
-                .limit(maxMessages)
                 .toList();
     }
 
