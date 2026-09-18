@@ -2,6 +2,7 @@ package org.example;
 
 
 import org.example.advisors.expension.ExpansionQueryAdvisor;
+import org.example.advisors.rag.RagAdvisor;
 import org.example.repository.ChatRepository;
 import org.example.service.PostgresChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -48,7 +49,8 @@ public class DemoWebinar1NoReactApplication {
                         ExpansionQueryAdvisor.builder(chatModel).order(0).build(),
                         getHistoryAdvisor(),
                         SimpleLoggerAdvisor.builder().order(2).build(),
-                        getRagAdvisor(),
+                  //      getRagAdvisor(),
+                        RagAdvisor.build(vectorStore).order(3).build(),
                         SimpleLoggerAdvisor.builder().order(4).build())
                 .defaultOptions(OllamaOptions.builder()
                         .temperature(0.3)
