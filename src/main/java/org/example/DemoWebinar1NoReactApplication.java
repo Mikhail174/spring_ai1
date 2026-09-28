@@ -27,13 +27,17 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class DemoWebinar1NoReactApplication {
 
-    private static final PromptTemplate MY_PROMPT_TEMPLATE = new PromptTemplate(
-            "{query}\n\n" +
-                    "Контекст:\n" +
-                    "---------------------\n" +
-                    "{question_answer_context}\n" +
-                    "---------------------\n\n" +
-                    "Отвечай только на основе контекста выше. Если информации нет в контексте, сообщи, что не можешь ответить."
+//    private static final PromptTemplate MY_PROMPT_TEMPLATE = new PromptTemplate(
+//            "{query}\n\n" +
+//                    "Контекст:\n" +
+//                    "---------------------\n" +
+//                    "{question_answer_context}\n" +
+//                    "---------------------\n\n" +
+//                    "Отвечай только на основе контекста выше. Если информации нет в контексте, сообщи, что не можешь ответить."
+//    );
+
+        private static final PromptTemplate SYSTEM_PROMPT = new PromptTemplate(
+            "Отвечай прямо и по делу. Связывай по факту - вопрос, ответ. Всегда связвай факт Context -> Вопрос"
     );
 
 
@@ -58,21 +62,23 @@ public class DemoWebinar1NoReactApplication {
                         .topK(20)
                         .repeatPenalty(1.1)
                         .build())
+                .defaultSystem(SYSTEM_PROMPT.render())
+    //            .defaultSystem(MY_PROMPT_TEMPLATE.render())
                 .build();
     }
 
     @Autowired
     private VectorStore vectorStore;
 
-    private Advisor getRagAdvisor() {
-        return QuestionAnswerAdvisor.builder(vectorStore)
-                .promptTemplate(MY_PROMPT_TEMPLATE)
-                .searchRequest(SearchRequest.builder().topK(4)
-                        .similarityThreshold(0.9)
-                        .build())
-                .order(3)
-                .build();
-    }
+//    private Advisor getRagAdvisor() {
+//        return QuestionAnswerAdvisor.builder(vectorStore)
+//                .promptTemplate(MY_PROMPT_TEMPLATE)
+//                .searchRequest(SearchRequest.builder().topK(4)
+//                        .similarityThreshold(0.9)
+//                        .build())
+//                .order(3)
+//                .build();
+//    }
 
     private Advisor getHistoryAdvisor() {
 

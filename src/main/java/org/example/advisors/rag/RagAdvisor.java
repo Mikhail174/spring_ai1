@@ -15,15 +15,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.example.advisors.expension.ExpansionQueryAdvisor.ENRICHED_QUESTION;
-import static org.example.advisors.expension.ExpansionQueryAdvisor.template;
 
 @Builder
 public class RagAdvisor implements BaseAdvisor {
 
     @Builder.Default
-    private static final PromptTemplate template = 
+    private static final PromptTemplate template = PromptTemplate.builder().template("""
+            Context: {context}
+            Question: {question}
+            """).build();
 
     private VectorStore vectorStore;
+
+    @Builder.Default
+    private SearchRequest searchRequest = SearchRequest.builder().topK(4).similarityThreshold(0.62).build();
 
     private int order;
 
@@ -36,10 +41,13 @@ public class RagAdvisor implements BaseAdvisor {
     public ChatClientRequest before(ChatClientRequest chatClientRequest, AdvisorChain advisorChain) {
         String userQuestion = chatClientRequest.prompt().getUserMessage().getText();
         String queryToRag = chatClientRequest.context().getOrDefault(ENRICHED_QUESTION, userQuestion).toString();
-        List<Document> documents = vectorStore.similaritySearch(SearchRequest.builder().query(queryToRag).topK(4).similarityThreshold(0.65).build());
+
+        List<Document> documents = vectorStore.similaritySearch(SearchRequest.from(searchRequest).query(queryToRag).topK(searchRequest.getTopK()*2).build());
+        BM25RerankEngine rerankEngine = BM25RerankEngine.builder().build();
+        documents = rerankEngine.rerank(documents, queryToRag, searchRequest.getTopK());
 
         if(documents == null || documents.isEmpty()) {
-            return chatClientRequest;
+            return chatClientRequest.mutate().context("CONTEXT", "ТУТ ПУСТО - ни один документ собачка не нашла").build();
         }
 
         String llmContext = documents.stream()
@@ -53,7 +61,7 @@ public class RagAdvisor implements BaseAdvisor {
 
     @Override
     public ChatClientResponse after(ChatClientResponse chatClientResponse, AdvisorChain advisorChain) {
-        return null;
+        return chatClientResponse;
     }
 
     @Override

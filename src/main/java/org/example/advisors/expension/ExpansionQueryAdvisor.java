@@ -17,12 +17,34 @@ public class ExpansionQueryAdvisor implements BaseAdvisor {
 
 
     public static final String ORIGINAL_QUESTION = "ORIGINAL_QUESTION";
-    private static final PromptTemplate template = PromptTemplate.builder()
-            .template("""
-                Если встретишь местоимения "я, ты, мы, он" и прочее. Заменяй их на имя mixa. Если
-                ничего не подходит нормального - то тогда ничего не возвращай.
+//    private static final PromptTemplate template = PromptTemplate.builder()
+//            .template("""
+//                Если встретишь местоимения "я, ты, мы, он" и прочее. Заменяй их на имя mixa. Если
+//                ничего не подходит нормального - то тогда ничего не возвращай.
+//                Question: {question}
+//                Reformulated:
+//                """).build();
+private static final PromptTemplate template = PromptTemplate.builder()
+        .template("""
+                Instruction: Расширь поисковый запрос, добавив наиболее релевантные термины.
+                
+                ПРАВИЛА:
+                1. Сохрани ВСЕ слова из исходного вопроса
+                2. Добавь МАКСИМУМ ПЯТЬ наиболее важных термина
+                3. Выбирай самые специфичные и релевантные слова
+                4. Результат - простой список слов через пробел
+
+                СТРАТЕГИЯ ВЫБОРА:
+                - Приоритет: специализированные термины
+                - Избегай общих слов
+                - Фокусируйся на ключевых понятиях
+
+                ПРИМЕРЫ:
+                "что такое спринг" → "что такое спринг фреймворк Java"
+                "как создать файл" → "как создать файл документ программа"
+
                 Question: {question}
-                Reformulated:
+                Expanded query:
                 """).build();
     public static final String ENRICHED_QUESTION = "ENRICHED_QUESTION";
     public static final String EXPANSION_RATIO = "EXPANSION_RATIO";
